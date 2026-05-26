@@ -916,10 +916,10 @@ function MailAuditTrail({
 }
 
 function JobsPanel({ jobs, loading, selectedJobId, onSelect }) {
-  const activeJobs = jobs.filter((job) =>
+  const activeJobs = jobs?.filter((job) =>
     ["queued", "running"].includes(job.status)
   );
-  const completedJobs = jobs.filter(
+  const completedJobs = jobs?.filter(
     (job) => !["queued", "running"].includes(job.status)
   );
   const visibleJobs = [
@@ -1298,7 +1298,7 @@ function ResultsPanel({ snapshot, onResend }) {
   }
 
   const { job, logs = [] } = snapshot;
-  const failedLogs = logs.filter((item) => item.status === "failed");
+  const failedLogs = logs?.filter((item) => item.status === "failed");
   const activeCount = job.pending + job.sending;
 
   return (

@@ -1,13 +1,13 @@
-import fs from 'node:fs';
-import path from 'node:path';
-import crypto from 'node:crypto';
-import bcrypt from 'bcryptjs';
-import MongoStore from 'connect-mongo';
-import cors from 'cors';
-import express from 'express';
-import session from 'express-session';
-import multer from 'multer';
-import { config } from './config.js';
+import fs from "node:fs";
+import path from "node:path";
+import crypto from "node:crypto";
+import bcrypt from "bcryptjs";
+import MongoStore from "connect-mongo";
+import cors from "cors";
+import express from "express";
+import session from "express-session";
+import multer from "multer";
+import { config } from "./config.js";
 import {
   createMailJob,
   createTemplate,
@@ -27,14 +27,30 @@ import {
   recoverActiveMailJobs,
   serializeTemplate,
   updateMailJobStatus,
-  updateTemplate
-} from './db.js';
-import { extractEmailsFromWorkbook } from './emailExtractor.js';
-import { sendTemplateMailToRecipient } from './mailer.js';
+  updateTemplate,
+} from "./db.js";
+import { extractEmailsFromWorkbook } from "./emailExtractor.js";
+import { sendTemplateMailToRecipient } from "./mailer.js";
 
 const app = express();
-const uploadDir = path.resolve(process.cwd(), 'server/uploads');
-const templateAttachmentDir = path.resolve(process.cwd(), 'server/template-attachments');
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// Serve frontend
+const distPath = path.join(__dirname, "../dist");
+
+app.use(express.static(distPath));
+
+app.get("*", (req, res) => {
+  res.sendFile(path.join(distPath, "index.html"));
+});
+
+const uploadDir = path.resolve(process.cwd(), "server/uploads");
+const templateAttachmentDir = path.resolve(
+  process.cwd(),
+  "server/template-attachments"
+);
 
 fs.mkdirSync(uploadDir, { recursive: true });
 fs.mkdirSync(templateAttachmentDir, { recursive: true });
@@ -42,15 +58,15 @@ fs.mkdirSync(templateAttachmentDir, { recursive: true });
 const recipientUpload = multer({
   dest: uploadDir,
   limits: {
-    fileSize: 5 * 1024 * 1024
+    fileSize: 5 * 1024 * 1024,
   },
   fileFilter: (_req, file, callback) => {
     const allowedMimeTypes = [
-      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-      'application/vnd.ms-excel',
-      'text/csv'
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      "application/vnd.ms-excel",
+      "text/csv",
     ];
-    const allowedExtensions = ['.xlsx', '.xls', '.csv'];
+    const allowedExtensions = [".xlsx", ".xls", ".csv"];
     const extension = path.extname(file.originalname).toLowerCase();
 
     if (
@@ -61,20 +77,23 @@ const recipientUpload = multer({
       return;
     }
 
-    callback(new Error('Only .xlsx, .xls, or .csv files are allowed.'));
-  }
+    callback(new Error("Only .xlsx, .xls, or .csv files are allowed."));
+  },
 });
 
 const templateAttachmentUpload = multer({
   storage: multer.diskStorage({
     destination: templateAttachmentDir,
     filename: (_req, file, callback) => {
-      callback(null, `${crypto.randomUUID()}${path.extname(file.originalname)}`);
-    }
+      callback(
+        null,
+        `${crypto.randomUUID()}${path.extname(file.originalname)}`
+      );
+    },
   }),
   limits: {
-    fileSize: 10 * 1024 * 1024
-  }
+    fileSize: 10 * 1024 * 1024,
+  },
 });
 
 const sessionOptions = {
@@ -83,10 +102,10 @@ const sessionOptions = {
   saveUninitialized: false,
   cookie: {
     httpOnly: true,
-    sameSite: 'lax',
+    sameSite: "lax",
     secure: false,
-    maxAge: 1000 * 60 * 60 * 8
-  }
+    maxAge: 1000 * 60 * 60 * 8,
+  },
 };
 
 if (config.mongoUri) {
@@ -96,7 +115,7 @@ if (config.mongoUri) {
 app.use(
   cors({
     origin: config.clientOrigin,
-    credentials: true
+    credentials: true,
   })
 );
 app.use(express.json());
@@ -104,36 +123,38 @@ app.use(session(sessionOptions));
 
 function requireAdmin(req, res, next) {
   if (!req.session?.admin) {
-    res.status(401).json({ message: 'Please login as admin.' });
+    res.status(401).json({ message: "Please login as admin." });
     return;
   }
 
   next();
 }
 
-app.get('/api/health', (_req, res) => {
+app.get("/api/health", (_req, res) => {
   res.json({ ok: true });
 });
 
-app.get('/api/auth/me', (req, res) => {
+app.get("/api/auth/me", (req, res) => {
   res.json({
     authenticated: Boolean(req.session?.admin),
-    admin: req.session?.admin || null
+    admin: req.session?.admin || null,
   });
 });
 
-app.post('/api/auth/login', async (req, res) => {
+app.post("/api/auth/login", async (req, res) => {
   const { email, password } = req.body;
   const emailMatches =
-    String(email || '').trim().toLowerCase() === config.adminEmail.toLowerCase();
+    String(email || "")
+      .trim()
+      .toLowerCase() === config.adminEmail.toLowerCase();
   const passwordMatches =
-    config.adminPassword.startsWith('$2a$') ||
-    config.adminPassword.startsWith('$2b$')
-      ? await bcrypt.compare(String(password || ''), config.adminPassword)
-      : String(password || '') === config.adminPassword;
+    config.adminPassword.startsWith("$2a$") ||
+    config.adminPassword.startsWith("$2b$")
+      ? await bcrypt.compare(String(password || ""), config.adminPassword)
+      : String(password || "") === config.adminPassword;
 
   if (!emailMatches || !passwordMatches) {
-    res.status(401).json({ message: 'Invalid admin credentials.' });
+    res.status(401).json({ message: "Invalid admin credentials." });
     return;
   }
 
@@ -141,32 +162,32 @@ app.post('/api/auth/login', async (req, res) => {
   res.json({ admin: req.session.admin });
 });
 
-app.post('/api/auth/logout', requireAdmin, (req, res) => {
+app.post("/api/auth/logout", requireAdmin, (req, res) => {
   req.session.destroy(() => {
-    res.clearCookie('connect.sid');
+    res.clearCookie("connect.sid");
     res.json({ ok: true });
   });
 });
 
 function templatePayloadFromRequest(req) {
   return {
-    name: String(req.body.name || '').trim(),
-    subject: String(req.body.subject || '').trim(),
-    content: String(req.body.content || '').trim()
+    name: String(req.body.name || "").trim(),
+    subject: String(req.body.subject || "").trim(),
+    content: String(req.body.content || "").trim(),
   };
 }
 
 function validateTemplatePayload(payload) {
   if (!payload.name) {
-    throw new Error('Template name is required.');
+    throw new Error("Template name is required.");
   }
 
   if (!payload.subject) {
-    throw new Error('Template subject is required.');
+    throw new Error("Template subject is required.");
   }
 
   if (!payload.content) {
-    throw new Error('Template content is required.');
+    throw new Error("Template content is required.");
   }
 }
 
@@ -180,7 +201,7 @@ function attachmentFromFile(file) {
     originalName: file.originalname,
     mimetype: file.mimetype,
     size: file.size,
-    path: file.path
+    path: file.path,
   };
 }
 
@@ -193,16 +214,16 @@ async function removeAttachmentFile(attachment) {
 const allowedQueueIntervals = new Set([2, 5, 10, 30, 60]);
 
 function getSendOptions(req) {
-  const mode = req.body.sendMode === 'queued' ? 'queued' : 'immediate';
+  const mode = req.body.sendMode === "queued" ? "queued" : "immediate";
 
-  if (mode === 'immediate') {
+  if (mode === "immediate") {
     return { mode, delaySeconds: 0 };
   }
 
   const delaySeconds = Number(req.body.queueIntervalSeconds);
 
   if (!allowedQueueIntervals.has(delaySeconds)) {
-    throw new Error('Please select a valid queue interval.');
+    throw new Error("Please select a valid queue interval.");
   }
 
   return { mode, delaySeconds };
@@ -218,7 +239,7 @@ async function sendMailLog(log) {
   const template = await getTemplateById(log.templateId.toString());
 
   if (!template) {
-    throw new Error('Template used for this mail no longer exists.');
+    throw new Error("Template used for this mail no longer exists.");
   }
 
   await markMailLogSending(log._id.toString());
@@ -233,7 +254,9 @@ async function processMailJob(jobId) {
     return;
   }
 
-  await updateMailJobStatus(jobId, 'running', { startedAt: job.startedAt || new Date() });
+  await updateMailJobStatus(jobId, "running", {
+    startedAt: job.startedAt || new Date(),
+  });
 
   try {
     const logs = await getPendingLogsForJob(jobId);
@@ -251,11 +274,11 @@ async function processMailJob(jobId) {
       }
     }
 
-    await updateMailJobStatus(jobId, 'completed', { completedAt: new Date() });
+    await updateMailJobStatus(jobId, "completed", { completedAt: new Date() });
   } catch (error) {
-    await updateMailJobStatus(jobId, 'failed', {
+    await updateMailJobStatus(jobId, "failed", {
       completedAt: new Date(),
-      error: error.message
+      error: error.message,
     });
   }
 }
@@ -267,7 +290,9 @@ async function processSingleMailLog(logId) {
     return;
   }
 
-  await updateMailJobStatus(log.jobId.toString(), 'running', { startedAt: new Date() });
+  await updateMailJobStatus(log.jobId.toString(), "running", {
+    startedAt: new Date(),
+  });
 
   try {
     await sendMailLog(log);
@@ -276,10 +301,14 @@ async function processSingleMailLog(logId) {
   }
 
   const snapshot = await getMailJobSnapshot(log.jobId.toString());
-  const remaining = snapshot.logs.some((item) => ['pending', 'sending'].includes(item.status));
+  const remaining = snapshot.logs.some((item) =>
+    ["pending", "sending"].includes(item.status)
+  );
 
   if (!remaining) {
-    await updateMailJobStatus(log.jobId.toString(), 'completed', { completedAt: new Date() });
+    await updateMailJobStatus(log.jobId.toString(), "completed", {
+      completedAt: new Date(),
+    });
   }
 }
 
@@ -289,7 +318,7 @@ function runInBackground(task) {
   });
 }
 
-app.get('/api/templates', requireAdmin, async (_req, res) => {
+app.get("/api/templates", requireAdmin, async (_req, res) => {
   try {
     res.json({ templates: await listTemplates() });
   } catch (error) {
@@ -297,12 +326,12 @@ app.get('/api/templates', requireAdmin, async (_req, res) => {
   }
 });
 
-app.get('/api/templates/:id', requireAdmin, async (req, res) => {
+app.get("/api/templates/:id", requireAdmin, async (req, res) => {
   try {
     const template = await getTemplateById(req.params.id);
 
     if (!template) {
-      res.status(404).json({ message: 'Template not found.' });
+      res.status(404).json({ message: "Template not found." });
       return;
     }
 
@@ -313,9 +342,9 @@ app.get('/api/templates/:id', requireAdmin, async (req, res) => {
 });
 
 app.post(
-  '/api/templates',
+  "/api/templates",
   requireAdmin,
-  templateAttachmentUpload.single('attachment'),
+  templateAttachmentUpload.single("attachment"),
   async (req, res) => {
     try {
       const payload = templatePayloadFromRequest(req);
@@ -323,7 +352,7 @@ app.post(
 
       const template = await createTemplate({
         ...payload,
-        attachment: attachmentFromFile(req.file)
+        attachment: attachmentFromFile(req.file),
       });
 
       res.status(201).json({ template });
@@ -335,16 +364,16 @@ app.post(
 );
 
 app.put(
-  '/api/templates/:id',
+  "/api/templates/:id",
   requireAdmin,
-  templateAttachmentUpload.single('attachment'),
+  templateAttachmentUpload.single("attachment"),
   async (req, res) => {
     try {
       const existing = await getTemplateById(req.params.id);
 
       if (!existing) {
         await removeAttachmentFile(attachmentFromFile(req.file));
-        res.status(404).json({ message: 'Template not found.' });
+        res.status(404).json({ message: "Template not found." });
         return;
       }
 
@@ -352,7 +381,8 @@ app.put(
       validateTemplatePayload(payload);
 
       const updates = { ...payload };
-      const removeAttachment = String(req.body.removeAttachment || '') === 'true';
+      const removeAttachment =
+        String(req.body.removeAttachment || "") === "true";
 
       if (req.file) {
         updates.attachment = attachmentFromFile(req.file);
@@ -371,12 +401,12 @@ app.put(
   }
 );
 
-app.delete('/api/templates/:id', requireAdmin, async (req, res) => {
+app.delete("/api/templates/:id", requireAdmin, async (req, res) => {
   try {
     const template = await deleteTemplate(req.params.id);
 
     if (!template) {
-      res.status(404).json({ message: 'Template not found.' });
+      res.status(404).json({ message: "Template not found." });
       return;
     }
 
@@ -387,54 +417,61 @@ app.delete('/api/templates/:id', requireAdmin, async (req, res) => {
   }
 });
 
-app.post('/api/mail/bulk-send', requireAdmin, recipientUpload.single('file'), async (req, res) => {
-  if (!req.file) {
-    res.status(400).json({ message: 'Please upload an Excel file.' });
-    return;
+app.post(
+  "/api/mail/bulk-send",
+  requireAdmin,
+  recipientUpload.single("file"),
+  async (req, res) => {
+    if (!req.file) {
+      res.status(400).json({ message: "Please upload an Excel file." });
+      return;
+    }
+
+    try {
+      if (!req.body.templateId) {
+        res.status(400).json({ message: "Please select a template." });
+        return;
+      }
+
+      const sendOptions = getSendOptions(req);
+      const template = await getTemplateById(req.body.templateId);
+
+      if (!template) {
+        res.status(400).json({ message: "Please select a valid template." });
+        return;
+      }
+
+      const emails = extractEmailsFromWorkbook(req.file.path);
+
+      if (emails.length === 0) {
+        res
+          .status(400)
+          .json({ message: "No email IDs found in the uploaded file." });
+        return;
+      }
+
+      const job = await createMailJob({
+        template,
+        emails,
+        sendOptions,
+      });
+
+      res.status(202).json({
+        message: "Queue has started. Mails will be sent in the background.",
+        job,
+        template: serializeTemplate(template),
+      });
+
+      runInBackground(() => processMailJob(job.id));
+    } catch (error) {
+      res.status(500).json({ message: error.message });
+    } finally {
+      fs.promises.unlink(req.file.path).catch(() => {});
+    }
   }
+);
 
-  try {
-    if (!req.body.templateId) {
-      res.status(400).json({ message: 'Please select a template.' });
-      return;
-    }
-
-    const sendOptions = getSendOptions(req);
-    const template = await getTemplateById(req.body.templateId);
-
-    if (!template) {
-      res.status(400).json({ message: 'Please select a valid template.' });
-      return;
-    }
-
-    const emails = extractEmailsFromWorkbook(req.file.path);
-
-    if (emails.length === 0) {
-      res.status(400).json({ message: 'No email IDs found in the uploaded file.' });
-      return;
-    }
-
-    const job = await createMailJob({
-      template,
-      emails,
-      sendOptions
-    });
-
-    res.status(202).json({
-      message: 'Queue has started. Mails will be sent in the background.',
-      job,
-      template: serializeTemplate(template)
-    });
-
-    runInBackground(() => processMailJob(job.id));
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  } finally {
-    fs.promises.unlink(req.file.path).catch(() => {});
-  }
-});
-
-app.get('/api/mail/jobs', requireAdmin, async (_req, res) => {
+app.get("/api/mail/jobs", requireAdmin, async (_req, res) => {
   try {
     res.json({ jobs: await listMailJobs() });
   } catch (error) {
@@ -442,12 +479,12 @@ app.get('/api/mail/jobs', requireAdmin, async (_req, res) => {
   }
 });
 
-app.get('/api/mail/jobs/:id', requireAdmin, async (req, res) => {
+app.get("/api/mail/jobs/:id", requireAdmin, async (req, res) => {
   try {
     const snapshot = await getMailJobSnapshot(req.params.id);
 
     if (!snapshot.job) {
-      res.status(404).json({ message: 'Mail job not found.' });
+      res.status(404).json({ message: "Mail job not found." });
       return;
     }
 
@@ -457,34 +494,36 @@ app.get('/api/mail/jobs/:id', requireAdmin, async (req, res) => {
   }
 });
 
-app.get('/api/mail/logs', requireAdmin, async (req, res) => {
+app.get("/api/mail/logs", requireAdmin, async (req, res) => {
   try {
     res.json(
       await listMailLogs({
-      search: req.query.search,
-      templateId: req.query.templateId,
-      status: req.query.status,
-      from: req.query.from,
-      to: req.query.to,
-      page: req.query.page,
-      limit: req.query.limit
-    })
+        search: req.query.search,
+        templateId: req.query.templateId,
+        status: req.query.status,
+        from: req.query.from,
+        to: req.query.to,
+        page: req.query.page,
+        limit: req.query.limit,
+      })
     );
   } catch (error) {
     res.status(400).json({ message: error.message });
   }
 });
 
-app.post('/api/mail/logs/:id/resend', requireAdmin, async (req, res) => {
+app.post("/api/mail/logs/:id/resend", requireAdmin, async (req, res) => {
   try {
     const log = await queueMailLogForResend(req.params.id);
 
     if (!log) {
-      res.status(400).json({ message: 'Only failed mails can be resent.' });
+      res.status(400).json({ message: "Only failed mails can be resent." });
       return;
     }
 
-    res.status(202).json({ message: 'Resend started.', logId: log._id.toString() });
+    res
+      .status(202)
+      .json({ message: "Resend started.", logId: log._id.toString() });
     runInBackground(() => processSingleMailLog(log._id.toString()));
   } catch (error) {
     res.status(400).json({ message: error.message });
@@ -492,7 +531,7 @@ app.post('/api/mail/logs/:id/resend', requireAdmin, async (req, res) => {
 });
 
 app.use((error, _req, res, _next) => {
-  res.status(400).json({ message: error.message || 'Something went wrong.' });
+  res.status(400).json({ message: error.message || "Something went wrong." });
 });
 
 app.listen(config.port, config.host, () => {

@@ -587,7 +587,7 @@ function Dashboard({ admin, onLogout }) {
                 required
               >
                 <option value="">Select template</option>
-                {templates.map((template) => (
+                {templates?.map((template) => (
                   <option value={template.id} key={template.id}>
                     {template.name}
                   </option>
@@ -779,7 +779,7 @@ function MailAuditTrail({
             onChange={(event) => updateFilter("templateId", event.target.value)}
           >
             <option value="">All templates</option>
-            {templates.map((template) => (
+            {templates?.map((template) => (
               <option key={template.id} value={template.id}>
                 {template.name}
               </option>
@@ -854,7 +854,7 @@ function MailAuditTrail({
               </tr>
             )}
             {!loading &&
-              logs.map((log) => (
+              logs?.map((log) => (
                 <tr key={log.id}>
                   <td>{log.email}</td>
                   <td>{log.templateName}</td>

@@ -5,11 +5,10 @@
   "type": "module",
   "scripts": {
     "dev": "concurrently \"npm run server:dev\" \"npm run client:dev\"",
-    "server:dev": "nodemon --watch server --watch .env server/index.js",
-    "server:start": "node server/index.js",
-    "client:dev": "vite --host 0.0.0.0",
-    "client:build": "vite build",
-    "preview": "vite preview --host 0.0.0.0"
+    "server:dev": "nodemon server/index.js",
+    "client:dev": "vite",
+    "build": "vite build",
+    "start": "node server/index.js"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",

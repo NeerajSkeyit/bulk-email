@@ -535,7 +535,8 @@ app.use((error, _req, res, _next) => {
   res.status(400).json({ message: error.message || "Something went wrong." });
 });
 
-app.listen(config.port, config.host, () => {
+// app.listen(config.port, config.host, () => {
+app.listen(config.port, () => {
   console.log(`Server running on http://${config.host}:${config.port}`);
   runInBackground(async () => {
     const jobIds = await recoverActiveMailJobs();

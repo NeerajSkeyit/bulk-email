@@ -583,7 +583,7 @@ function Dashboard({ admin, onLogout }) {
               <select
                 value={selectedTemplateId}
                 onChange={(event) => setSelectedTemplateId(event.target.value)}
-                disabled={templatesLoading || templates.length === 0}
+                disabled={templatesLoading || templates?.length === 0}
                 required
               >
                 <option value="">Select template</option>
@@ -848,7 +848,7 @@ function MailAuditTrail({
                 <td colSpan="7">Loading mail logs...</td>
               </tr>
             )}
-            {!loading && logs.length === 0 && (
+            {!loading && logs?.length === 0 && (
               <tr>
                 <td colSpan="7">No mail logs found.</td>
               </tr>
@@ -924,7 +924,7 @@ function JobsPanel({ jobs, loading, selectedJobId, onSelect }) {
   );
   const visibleJobs = [
     ...activeJobs,
-    ...completedJobs.slice(0, Math.max(0, 10 - activeJobs.length)),
+    ...completedJobs.slice(0, Math.max(0, 10 - activeJobs?.length)),
   ];
 
   return (
@@ -939,10 +939,10 @@ function JobsPanel({ jobs, loading, selectedJobId, onSelect }) {
 
       <div className="jobs-list">
         {loading && <div className="template-empty">Loading jobs...</div>}
-        {!loading && visibleJobs.length === 0 && (
+        {!loading && visibleJobs?.length === 0 && (
           <div className="template-empty">No mail jobs found.</div>
         )}
-        {visibleJobs.map((job) => {
+        {visibleJobs?.map((job) => {
           const activeCount = job.pending + job.sending;
 
           return (
@@ -1144,10 +1144,10 @@ function TemplateManager({ templates, loading, error, onTemplatesChanged }) {
 
       <div className="template-list" aria-live="polite">
         {loading && <div className="template-empty">Loading templates...</div>}
-        {!loading && templates.length === 0 && (
+        {!loading && templates?.length === 0 && (
           <div className="template-empty">No templates created yet.</div>
         )}
-        {templates.map((template) => (
+        {templates?.map((template) => (
           <article className="template-item" key={template.id}>
             <div>
               <h3>{template.name}</h3>
@@ -1321,14 +1321,14 @@ function ResultsPanel({ snapshot, onResend }) {
 
       <h3 className="section-title">Failed mails</h3>
       <div className="result-list">
-        {failedLogs.length === 0 && (
+        {failedLogs?.length === 0 && (
           <div className="result-empty">
             {job.status === "completed"
               ? "No failed mails."
               : "Failures will appear here if any occur."}
           </div>
         )}
-        {failedLogs.map((item) => (
+        {failedLogs?.map((item) => (
           <div className="result-row" key={item.email}>
             <XCircle className="error-icon" aria-hidden="true" />
             <div>

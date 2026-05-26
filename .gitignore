@@ -1,0 +1,8 @@
+node_modules
+dist
+.env
+uploads
+server/attachments/*
+server/template-attachments/*
+!server/attachments/.gitkeep
+!server/template-attachments/.gitkeep

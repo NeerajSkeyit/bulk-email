@@ -1,5 +1,5 @@
-import React, { useEffect, useRef, useState } from 'react';
-import { createRoot } from 'react-dom/client';
+import React, { useEffect, useRef, useState } from "react";
+import { createRoot } from "react-dom/client";
 import {
   Bold,
   Edit3,
@@ -20,14 +20,14 @@ import {
   Underline,
   UploadCloud,
   X,
-  XCircle
-} from 'lucide-react';
-import './styles.css';
+  XCircle,
+} from "lucide-react";
+import "./styles.css";
 
 async function parseApiResponse(response, fallbackMessage) {
-  const contentType = response.headers.get('content-type') || '';
+  const contentType = response.headers.get("content-type") || "";
 
-  if (contentType.includes('application/json')) {
+  if (contentType.includes("application/json")) {
     const data = await response.json();
     if (!response.ok) throw new Error(data.message || fallbackMessage);
     return data;
@@ -40,16 +40,16 @@ async function parseApiResponse(response, fallbackMessage) {
 
 function templateFormData(form) {
   const formData = new FormData();
-  formData.append('name', form.name);
-  formData.append('subject', form.subject);
-  formData.append('content', form.content);
+  formData.append("name", form.name);
+  formData.append("subject", form.subject);
+  formData.append("content", form.content);
 
   if (form.attachmentFile) {
-    formData.append('attachment', form.attachmentFile);
+    formData.append("attachment", form.attachmentFile);
   }
 
   if (form.removeAttachment) {
-    formData.append('removeAttachment', 'true');
+    formData.append("removeAttachment", "true");
   }
 
   return formData;
@@ -57,79 +57,82 @@ function templateFormData(form) {
 
 const api = {
   async me() {
-    const response = await fetch('/api/auth/me', { credentials: 'include' });
-    return parseApiResponse(response, 'Unable to check login session.');
+    const response = await fetch("/api/auth/me", { credentials: "include" });
+    return parseApiResponse(response, "Unable to check login session.");
   },
   async login(email, password) {
-    const response = await fetch('/api/auth/login', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      credentials: 'include',
-      body: JSON.stringify({ email, password })
+    const response = await fetch("/api/auth/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify({ email, password }),
     });
 
-    return parseApiResponse(response, 'Login failed.');
+    return parseApiResponse(response, "Login failed.");
   },
   async logout() {
-    const response = await fetch('/api/auth/logout', {
-      method: 'POST',
-      credentials: 'include'
+    const response = await fetch("/api/auth/logout", {
+      method: "POST",
+      credentials: "include",
     });
-    return parseApiResponse(response, 'Logout failed.');
+    return parseApiResponse(response, "Logout failed.");
   },
   async listTemplates() {
-    const response = await fetch('/api/templates', { credentials: 'include' });
-    return parseApiResponse(response, 'Unable to load templates.');
+    const response = await fetch("/api/templates", { credentials: "include" });
+    return parseApiResponse(response, "Unable to load templates.");
   },
   async createTemplate(form) {
-    const response = await fetch('/api/templates', {
-      method: 'POST',
-      credentials: 'include',
-      body: templateFormData(form)
+    const response = await fetch("/api/templates", {
+      method: "POST",
+      credentials: "include",
+      body: templateFormData(form),
     });
-    return parseApiResponse(response, 'Unable to create template.');
+    return parseApiResponse(response, "Unable to create template.");
   },
   async updateTemplate(id, form) {
     const response = await fetch(`/api/templates/${id}`, {
-      method: 'PUT',
-      credentials: 'include',
-      body: templateFormData(form)
+      method: "PUT",
+      credentials: "include",
+      body: templateFormData(form),
     });
-    return parseApiResponse(response, 'Unable to update template.');
+    return parseApiResponse(response, "Unable to update template.");
   },
   async deleteTemplate(id) {
     const response = await fetch(`/api/templates/${id}`, {
-      method: 'DELETE',
-      credentials: 'include'
+      method: "DELETE",
+      credentials: "include",
     });
-    return parseApiResponse(response, 'Unable to delete template.');
+    return parseApiResponse(response, "Unable to delete template.");
   },
   async bulkSend(file, templateId, sendOptions) {
     const formData = new FormData();
-    formData.append('file', file);
-    formData.append('templateId', templateId);
-    formData.append('sendMode', sendOptions.mode);
-    formData.append('queueIntervalSeconds', String(sendOptions.queueIntervalSeconds));
+    formData.append("file", file);
+    formData.append("templateId", templateId);
+    formData.append("sendMode", sendOptions.mode);
+    formData.append(
+      "queueIntervalSeconds",
+      String(sendOptions.queueIntervalSeconds)
+    );
 
-    const response = await fetch('/api/mail/bulk-send', {
-      method: 'POST',
-      credentials: 'include',
-      body: formData
+    const response = await fetch("/api/mail/bulk-send", {
+      method: "POST",
+      credentials: "include",
+      body: formData,
     });
 
-    return parseApiResponse(response, 'Bulk send failed.');
+    return parseApiResponse(response, "Bulk send failed.");
   },
   async getMailJob(id) {
     const response = await fetch(`/api/mail/jobs/${id}`, {
-      credentials: 'include'
+      credentials: "include",
     });
-    return parseApiResponse(response, 'Unable to load mail job.');
+    return parseApiResponse(response, "Unable to load mail job.");
   },
   async listMailJobs() {
-    const response = await fetch('/api/mail/jobs', {
-      credentials: 'include'
+    const response = await fetch("/api/mail/jobs", {
+      credentials: "include",
     });
-    return parseApiResponse(response, 'Unable to load mail jobs.');
+    return parseApiResponse(response, "Unable to load mail jobs.");
   },
   async listMailLogs(filters = {}) {
     const params = new URLSearchParams();
@@ -141,36 +144,36 @@ const api = {
     });
 
     const query = params.toString();
-    const response = await fetch(`/api/mail/logs${query ? `?${query}` : ''}`, {
-      credentials: 'include'
+    const response = await fetch(`/api/mail/logs${query ? `?${query}` : ""}`, {
+      credentials: "include",
     });
-    return parseApiResponse(response, 'Unable to load mail logs.');
+    return parseApiResponse(response, "Unable to load mail logs.");
   },
   async resendMailLog(id) {
     const response = await fetch(`/api/mail/logs/${id}/resend`, {
-      method: 'POST',
-      credentials: 'include'
+      method: "POST",
+      credentials: "include",
     });
-    return parseApiResponse(response, 'Unable to resend mail.');
-  }
+    return parseApiResponse(response, "Unable to resend mail.");
+  },
 };
 
 const emptyTemplateForm = {
-  id: '',
-  name: '',
-  subject: '',
-  content: '',
+  id: "",
+  name: "",
+  subject: "",
+  content: "",
   attachmentFile: null,
   existingAttachment: null,
-  removeAttachment: false
+  removeAttachment: false,
 };
 
 const emptyAuditFilters = {
-  search: '',
-  templateId: '',
-  status: '',
-  from: '',
-  to: ''
+  search: "",
+  templateId: "",
+  status: "",
+  from: "",
+  to: "",
 };
 
 function App() {
@@ -200,14 +203,14 @@ function App() {
 }
 
 function Login({ onLogin }) {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
   async function handleSubmit(event) {
     event.preventDefault();
-    setError('');
+    setError("");
     setLoading(true);
 
     try {
@@ -227,7 +230,9 @@ function Login({ onLogin }) {
           <ShieldCheck aria-hidden="true" />
         </div>
         <h1 id="login-title">Admin Login</h1>
-        <p>Sign in to manage templates and send bulk mail from an Excel file.</p>
+        <p>
+          Sign in to manage templates and send bulk mail from an Excel file.
+        </p>
 
         <form onSubmit={handleSubmit} className="form-stack">
           <label>
@@ -255,7 +260,11 @@ function Login({ onLogin }) {
           {error && <div className="alert error">{error}</div>}
 
           <button className="primary-button" type="submit" disabled={loading}>
-            {loading ? <Loader2 className="spin" aria-hidden="true" /> : <Mail aria-hidden="true" />}
+            {loading ? (
+              <Loader2 className="spin" aria-hidden="true" />
+            ) : (
+              <Mail aria-hidden="true" />
+            )}
             Login
           </button>
         </form>
@@ -267,12 +276,12 @@ function Login({ onLogin }) {
 function Dashboard({ admin, onLogout }) {
   const [templates, setTemplates] = useState([]);
   const [templatesLoading, setTemplatesLoading] = useState(true);
-  const [templateError, setTemplateError] = useState('');
-  const [selectedTemplateId, setSelectedTemplateId] = useState('');
+  const [templateError, setTemplateError] = useState("");
+  const [selectedTemplateId, setSelectedTemplateId] = useState("");
   const [file, setFile] = useState(null);
-  const [sendMode, setSendMode] = useState('immediate');
+  const [sendMode, setSendMode] = useState("immediate");
   const [queueIntervalSeconds, setQueueIntervalSeconds] = useState(5);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
   const [jobs, setJobs] = useState([]);
   const [jobsLoading, setJobsLoading] = useState(true);
   const [mailLogs, setMailLogs] = useState([]);
@@ -283,22 +292,24 @@ function Dashboard({ admin, onLogout }) {
     page: 1,
     limit: 25,
     total: 0,
-    totalPages: 1
+    totalPages: 1,
   });
   const [auditFilters, setAuditFilters] = useState(emptyAuditFilters);
   const [jobSnapshot, setJobSnapshot] = useState(null);
-  const [activeJobId, setActiveJobId] = useState('');
-  const [activeTab, setActiveTab] = useState('send');
+  const [activeJobId, setActiveJobId] = useState("");
+  const [activeTab, setActiveTab] = useState("send");
   const [sending, setSending] = useState(false);
 
   async function loadTemplates() {
-    setTemplateError('');
+    setTemplateError("");
     setTemplatesLoading(true);
 
     try {
       const data = await api.listTemplates();
       setTemplates(data.templates);
-      setSelectedTemplateId((current) => current || data.templates[0]?.id || '');
+      setSelectedTemplateId(
+        (current) => current || data.templates?.[0]?.id || ""
+      );
     } catch (err) {
       setTemplateError(err.message);
     } finally {
@@ -319,7 +330,9 @@ function Dashboard({ admin, onLogout }) {
       setJobs(data.jobs);
 
       if (!activeJobId && !jobSnapshot?.job) {
-        const activeJob = data.jobs.find((job) => ['queued', 'running'].includes(job.status));
+        const activeJob = data.jobs.find((job) =>
+          ["queued", "running"].includes(job.status)
+        );
         if (activeJob) {
           openJob(activeJob.id);
         }
@@ -356,7 +369,11 @@ function Dashboard({ admin, onLogout }) {
     };
   }, []);
 
-  async function loadMailLogs(filters = auditFilters, page = auditPage, limit = auditLimit) {
+  async function loadMailLogs(
+    filters = auditFilters,
+    page = auditPage,
+    limit = auditLimit
+  ) {
     setMailLogsLoading(true);
 
     try {
@@ -383,7 +400,11 @@ function Dashboard({ admin, onLogout }) {
 
     async function refreshMailLogs() {
       try {
-        const data = await api.listMailLogs({ ...auditFilters, page: auditPage, limit: auditLimit });
+        const data = await api.listMailLogs({
+          ...auditFilters,
+          page: auditPage,
+          limit: auditLimit,
+        });
 
         if (!stopped) {
           setMailLogs(data.logs);
@@ -418,8 +439,8 @@ function Dashboard({ admin, onLogout }) {
         if (!stopped) {
           setJobSnapshot(data);
 
-          if (['completed', 'failed'].includes(data.job.status)) {
-            setActiveJobId('');
+          if (["completed", "failed"].includes(data.job.status)) {
+            setActiveJobId("");
           }
         }
       } catch (err) {
@@ -444,12 +465,14 @@ function Dashboard({ admin, onLogout }) {
   }
 
   async function openJob(jobId) {
-    setError('');
+    setError("");
 
     try {
       const data = await api.getMailJob(jobId);
       setJobSnapshot(data);
-      setActiveJobId(['queued', 'running'].includes(data.job.status) ? jobId : '');
+      setActiveJobId(
+        ["queued", "running"].includes(data.job.status) ? jobId : ""
+      );
     } catch (err) {
       setError(err.message);
     }
@@ -457,17 +480,17 @@ function Dashboard({ admin, onLogout }) {
 
   async function handleSend(event) {
     event.preventDefault();
-    setError('');
+    setError("");
     setJobSnapshot(null);
-    setActiveJobId('');
+    setActiveJobId("");
 
     if (!selectedTemplateId) {
-      setError('Please select a template first.');
+      setError("Please select a template first.");
       return;
     }
 
     if (!file) {
-      setError('Please choose an Excel file first.');
+      setError("Please choose an Excel file first.");
       return;
     }
 
@@ -475,7 +498,7 @@ function Dashboard({ admin, onLogout }) {
     try {
       const data = await api.bulkSend(file, selectedTemplateId, {
         mode: sendMode,
-        queueIntervalSeconds
+        queueIntervalSeconds,
       });
       setJobSnapshot({ job: data.job, logs: [] });
       setActiveJobId(data.job.id);
@@ -489,7 +512,7 @@ function Dashboard({ admin, onLogout }) {
   }
 
   async function handleResend(logId) {
-    setError('');
+    setError("");
     const jobId = activeJobId || jobSnapshot?.job?.id;
 
     try {
@@ -515,7 +538,12 @@ function Dashboard({ admin, onLogout }) {
         </div>
         <div className="admin-actions">
           <span>{admin.email}</span>
-          <button className="icon-button" type="button" onClick={handleLogout} aria-label="Logout">
+          <button
+            className="icon-button"
+            type="button"
+            onClick={handleLogout}
+            aria-label="Logout"
+          >
             <LogOut aria-hidden="true" />
           </button>
         </div>
@@ -523,15 +551,15 @@ function Dashboard({ admin, onLogout }) {
 
       <nav className="dashboard-tabs" aria-label="Dashboard sections">
         {[
-          ['send', 'Send'],
-          ['jobs', 'Jobs'],
-          ['templates', 'Templates'],
-          ['audit', 'Audit trail']
+          ["send", "Send"],
+          ["jobs", "Jobs"],
+          ["templates", "Templates"],
+          ["audit", "Audit trail"],
         ].map(([id, label]) => (
           <button
             key={id}
             type="button"
-            className={activeTab === id ? 'active' : ''}
+            className={activeTab === id ? "active" : ""}
             onClick={() => setActiveTab(id)}
           >
             {label}
@@ -539,7 +567,7 @@ function Dashboard({ admin, onLogout }) {
         ))}
       </nav>
 
-      {activeTab === 'send' && (
+      {activeTab === "send" && (
         <section className="workspace send-layout">
           <form className="upload-panel" onSubmit={handleSend}>
             <div className="panel-heading">
@@ -570,35 +598,37 @@ function Dashboard({ admin, onLogout }) {
             <div className="field-group">
               <span className="field-label">Send mode</span>
               <div className="segmented-control">
-                <label className={sendMode === 'immediate' ? 'selected' : ''}>
+                <label className={sendMode === "immediate" ? "selected" : ""}>
                   <input
                     type="radio"
                     name="sendMode"
                     value="immediate"
-                    checked={sendMode === 'immediate'}
-                    onChange={() => setSendMode('immediate')}
+                    checked={sendMode === "immediate"}
+                    onChange={() => setSendMode("immediate")}
                   />
                   One go
                 </label>
-                <label className={sendMode === 'queued' ? 'selected' : ''}>
+                <label className={sendMode === "queued" ? "selected" : ""}>
                   <input
                     type="radio"
                     name="sendMode"
                     value="queued"
-                    checked={sendMode === 'queued'}
-                    onChange={() => setSendMode('queued')}
+                    checked={sendMode === "queued"}
+                    onChange={() => setSendMode("queued")}
                   />
                   Queue
                 </label>
               </div>
             </div>
 
-            {sendMode === 'queued' && (
+            {sendMode === "queued" && (
               <label>
                 Queue speed
                 <select
                   value={queueIntervalSeconds}
-                  onChange={(event) => setQueueIntervalSeconds(Number(event.target.value))}
+                  onChange={(event) =>
+                    setQueueIntervalSeconds(Number(event.target.value))
+                  }
                 >
                   <option value="2">1 mail per 2 seconds</option>
                   <option value="5">1 mail per 5 seconds</option>
@@ -611,7 +641,7 @@ function Dashboard({ admin, onLogout }) {
 
             <label className="drop-zone">
               <UploadCloud aria-hidden="true" />
-              <strong>{file ? file.name : 'Choose Excel file'}</strong>
+              <strong>{file ? file.name : "Choose Excel file"}</strong>
               <span>Email IDs are extracted from the first sheet.</span>
               <input
                 type="file"
@@ -622,9 +652,21 @@ function Dashboard({ admin, onLogout }) {
 
             {error && <div className="alert error">{error}</div>}
 
-            <button className="primary-button send-button" type="submit" disabled={sending}>
-              {sending ? <Loader2 className="spin" aria-hidden="true" /> : <Send aria-hidden="true" />}
-              {sending ? 'Sending...' : sendMode === 'queued' ? 'Queue Mail' : 'Send Mail'}
+            <button
+              className="primary-button send-button"
+              type="submit"
+              disabled={sending}
+            >
+              {sending ? (
+                <Loader2 className="spin" aria-hidden="true" />
+              ) : (
+                <Send aria-hidden="true" />
+              )}
+              {sending
+                ? "Sending..."
+                : sendMode === "queued"
+                  ? "Queue Mail"
+                  : "Send Mail"}
             </button>
           </form>
 
@@ -632,12 +674,12 @@ function Dashboard({ admin, onLogout }) {
         </section>
       )}
 
-      {activeTab === 'jobs' && (
+      {activeTab === "jobs" && (
         <section className="workspace jobs-layout">
           <JobsPanel
             jobs={jobs}
             loading={jobsLoading}
-            selectedJobId={jobSnapshot?.job?.id || ''}
+            selectedJobId={jobSnapshot?.job?.id || ""}
             onSelect={openJob}
           />
 
@@ -645,7 +687,7 @@ function Dashboard({ admin, onLogout }) {
         </section>
       )}
 
-      {activeTab === 'templates' && (
+      {activeTab === "templates" && (
         <TemplateManager
           templates={templates}
           loading={templatesLoading}
@@ -654,7 +696,7 @@ function Dashboard({ admin, onLogout }) {
         />
       )}
 
-      {activeTab === 'audit' && (
+      {activeTab === "audit" && (
         <MailAuditTrail
           logs={mailLogs}
           loading={mailLogsLoading}
@@ -679,7 +721,7 @@ function Dashboard({ admin, onLogout }) {
 }
 
 function displayDate(value) {
-  return value ? new Date(value).toLocaleString() : '-';
+  return value ? new Date(value).toLocaleString() : "-";
 }
 
 function logEventDate(log) {
@@ -696,7 +738,7 @@ function MailAuditTrail({
   onLimitChange,
   onPageChange,
   onFiltersChange,
-  onRefresh
+  onRefresh,
 }) {
   function updateFilter(field, value) {
     onFiltersChange((current) => ({ ...current, [field]: value }));
@@ -725,7 +767,7 @@ function MailAuditTrail({
           <input
             type="text"
             value={filters.search}
-            onChange={(event) => updateFilter('search', event.target.value)}
+            onChange={(event) => updateFilter("search", event.target.value)}
             placeholder="Email or subject"
           />
         </label>
@@ -734,7 +776,7 @@ function MailAuditTrail({
           Template
           <select
             value={filters.templateId}
-            onChange={(event) => updateFilter('templateId', event.target.value)}
+            onChange={(event) => updateFilter("templateId", event.target.value)}
           >
             <option value="">All templates</option>
             {templates.map((template) => (
@@ -747,7 +789,10 @@ function MailAuditTrail({
 
         <label>
           Status
-          <select value={filters.status} onChange={(event) => updateFilter('status', event.target.value)}>
+          <select
+            value={filters.status}
+            onChange={(event) => updateFilter("status", event.target.value)}
+          >
             <option value="">All statuses</option>
             <option value="pending">Pending</option>
             <option value="sending">Sending</option>
@@ -761,7 +806,7 @@ function MailAuditTrail({
           <input
             type="datetime-local"
             value={filters.from}
-            onChange={(event) => updateFilter('from', event.target.value)}
+            onChange={(event) => updateFilter("from", event.target.value)}
           />
         </label>
 
@@ -770,11 +815,15 @@ function MailAuditTrail({
           <input
             type="datetime-local"
             value={filters.to}
-            onChange={(event) => updateFilter('to', event.target.value)}
+            onChange={(event) => updateFilter("to", event.target.value)}
           />
         </label>
 
-        <button className="secondary-button" type="button" onClick={clearFilters}>
+        <button
+          className="secondary-button"
+          type="button"
+          onClick={clearFilters}
+        >
           <X aria-hidden="true" />
           Clear
         </button>
@@ -811,11 +860,15 @@ function MailAuditTrail({
                   <td>{log.templateName}</td>
                   <td>{log.templateSubject}</td>
                   <td>
-                    <span className={`status-badge ${log.status}`}>{log.status}</span>
+                    <span className={`status-badge ${log.status}`}>
+                      {log.status}
+                    </span>
                   </td>
                   <td>{displayDate(logEventDate(log))}</td>
                   <td>{log.attempts}</td>
-                  <td>{log.status === 'failed' ? log.error : log.messageId || '-'}</td>
+                  <td>
+                    {log.status === "failed" ? log.error : log.messageId || "-"}
+                  </td>
                 </tr>
               ))}
           </tbody>
@@ -824,11 +877,15 @@ function MailAuditTrail({
 
       <div className="pagination-bar">
         <span>
-          Showing page {pagination.page} of {pagination.totalPages} · {pagination.total} logs
+          Showing page {pagination.page} of {pagination.totalPages} ·{" "}
+          {pagination.total} logs
         </span>
         <label>
           Rows
-          <select value={limit} onChange={(event) => onLimitChange(Number(event.target.value))}>
+          <select
+            value={limit}
+            onChange={(event) => onLimitChange(Number(event.target.value))}
+          >
             <option value="10">10</option>
             <option value="25">25</option>
             <option value="50">50</option>
@@ -859,11 +916,15 @@ function MailAuditTrail({
 }
 
 function JobsPanel({ jobs, loading, selectedJobId, onSelect }) {
-  const activeJobs = jobs.filter((job) => ['queued', 'running'].includes(job.status));
-  const completedJobs = jobs.filter((job) => !['queued', 'running'].includes(job.status));
+  const activeJobs = jobs.filter((job) =>
+    ["queued", "running"].includes(job.status)
+  );
+  const completedJobs = jobs.filter(
+    (job) => !["queued", "running"].includes(job.status)
+  );
   const visibleJobs = [
     ...activeJobs,
-    ...completedJobs.slice(0, Math.max(0, 10 - activeJobs.length))
+    ...completedJobs.slice(0, Math.max(0, 10 - activeJobs.length)),
   ];
 
   return (
@@ -886,7 +947,7 @@ function JobsPanel({ jobs, loading, selectedJobId, onSelect }) {
 
           return (
             <button
-              className={`job-item ${selectedJobId === job.id ? 'selected' : ''}`}
+              className={`job-item ${selectedJobId === job.id ? "selected" : ""}`}
               type="button"
               key={job.id}
               onClick={() => onSelect(job.id)}
@@ -897,7 +958,8 @@ function JobsPanel({ jobs, loading, selectedJobId, onSelect }) {
               </span>
               <span className={`status-badge ${job.status}`}>{job.status}</span>
               <span className="job-counts">
-                {job.sent}/{job.total} sent · {activeCount} pending · {job.failed} failed
+                {job.sent}/{job.total} sent · {activeCount} pending ·{" "}
+                {job.failed} failed
               </span>
             </button>
           );
@@ -910,7 +972,7 @@ function JobsPanel({ jobs, loading, selectedJobId, onSelect }) {
 function TemplateManager({ templates, loading, error, onTemplatesChanged }) {
   const [form, setForm] = useState(emptyTemplateForm);
   const [saving, setSaving] = useState(false);
-  const [formError, setFormError] = useState('');
+  const [formError, setFormError] = useState("");
 
   function updateField(field, value) {
     setForm((current) => ({ ...current, [field]: value }));
@@ -918,7 +980,7 @@ function TemplateManager({ templates, loading, error, onTemplatesChanged }) {
 
   function resetForm() {
     setForm(emptyTemplateForm);
-    setFormError('');
+    setFormError("");
   }
 
   function editTemplate(template) {
@@ -929,14 +991,14 @@ function TemplateManager({ templates, loading, error, onTemplatesChanged }) {
       content: template.content,
       attachmentFile: null,
       existingAttachment: template.attachment,
-      removeAttachment: false
+      removeAttachment: false,
     });
-    setFormError('');
+    setFormError("");
   }
 
   async function handleSave(event) {
     event.preventDefault();
-    setFormError('');
+    setFormError("");
     setSaving(true);
 
     try {
@@ -960,7 +1022,7 @@ function TemplateManager({ templates, loading, error, onTemplatesChanged }) {
       return;
     }
 
-    setFormError('');
+    setFormError("");
     try {
       await api.deleteTemplate(template.id);
       if (form.id === template.id) {
@@ -991,7 +1053,7 @@ function TemplateManager({ templates, loading, error, onTemplatesChanged }) {
           <input
             type="text"
             value={form.name}
-            onChange={(event) => updateField('name', event.target.value)}
+            onChange={(event) => updateField("name", event.target.value)}
             placeholder="Example: Monthly update"
             required
           />
@@ -1002,7 +1064,7 @@ function TemplateManager({ templates, loading, error, onTemplatesChanged }) {
           <input
             type="text"
             value={form.subject}
-            onChange={(event) => updateField('subject', event.target.value)}
+            onChange={(event) => updateField("subject", event.target.value)}
             placeholder="Email subject"
             required
           />
@@ -1012,7 +1074,7 @@ function TemplateManager({ templates, loading, error, onTemplatesChanged }) {
           <span className="field-label">Content</span>
           <RichTextEditor
             value={form.content}
-            onChange={(value) => updateField('content', value)}
+            onChange={(value) => updateField("content", value)}
             placeholder="Write your email content..."
           />
         </div>
@@ -1022,8 +1084,8 @@ function TemplateManager({ templates, loading, error, onTemplatesChanged }) {
           <input
             type="file"
             onChange={(event) => {
-              updateField('attachmentFile', event.target.files?.[0] || null);
-              updateField('removeAttachment', false);
+              updateField("attachmentFile", event.target.files?.[0] || null);
+              updateField("removeAttachment", false);
             }}
           />
         </label>
@@ -1040,28 +1102,42 @@ function TemplateManager({ templates, loading, error, onTemplatesChanged }) {
               <button
                 type="button"
                 className="text-button"
-                onClick={() => updateField('removeAttachment', !form.removeAttachment)}
+                onClick={() =>
+                  updateField("removeAttachment", !form.removeAttachment)
+                }
               >
-                {form.removeAttachment ? 'Keep' : 'Remove'}
+                {form.removeAttachment ? "Keep" : "Remove"}
               </button>
             )}
           </div>
         )}
 
-        {form.removeAttachment && <div className="alert subtle">Attachment will be removed on save.</div>}
+        {form.removeAttachment && (
+          <div className="alert subtle">
+            Attachment will be removed on save.
+          </div>
+        )}
         {formError && <div className="alert error">{formError}</div>}
         {error && <div className="alert error">{error}</div>}
 
         <div className="form-actions">
           {form.id && (
-            <button className="secondary-button" type="button" onClick={resetForm}>
+            <button
+              className="secondary-button"
+              type="button"
+              onClick={resetForm}
+            >
               <X aria-hidden="true" />
               Cancel
             </button>
           )}
           <button className="primary-button" type="submit" disabled={saving}>
-            {saving ? <Loader2 className="spin" aria-hidden="true" /> : <Save aria-hidden="true" />}
-            {form.id ? 'Update Template' : 'Create Template'}
+            {saving ? (
+              <Loader2 className="spin" aria-hidden="true" />
+            ) : (
+              <Save aria-hidden="true" />
+            )}
+            {form.id ? "Update Template" : "Create Template"}
           </button>
         </div>
       </form>
@@ -1113,12 +1189,12 @@ function RichTextEditor({ value, onChange, placeholder }) {
 
   useEffect(() => {
     if (editorRef.current && editorRef.current.innerHTML !== value) {
-      editorRef.current.innerHTML = value || '';
+      editorRef.current.innerHTML = value || "";
     }
   }, [value]);
 
   function updateValue() {
-    onChange(editorRef.current?.innerHTML || '');
+    onChange(editorRef.current?.innerHTML || "");
   }
 
   function runCommand(command, commandValue = null) {
@@ -1128,39 +1204,51 @@ function RichTextEditor({ value, onChange, placeholder }) {
   }
 
   function handleLink() {
-    const url = prompt('Enter link URL');
+    const url = prompt("Enter link URL");
 
     if (!url) {
       return;
     }
 
-    runCommand('createLink', url);
+    runCommand("createLink", url);
   }
 
   return (
     <div className="rich-editor">
       <div className="editor-toolbar" aria-label="Content formatting">
-        <ToolbarButton label="Bold" onClick={() => runCommand('bold')}>
+        <ToolbarButton label="Bold" onClick={() => runCommand("bold")}>
           <Bold aria-hidden="true" />
         </ToolbarButton>
-        <ToolbarButton label="Italic" onClick={() => runCommand('italic')}>
+        <ToolbarButton label="Italic" onClick={() => runCommand("italic")}>
           <Italic aria-hidden="true" />
         </ToolbarButton>
-        <ToolbarButton label="Underline" onClick={() => runCommand('underline')}>
+        <ToolbarButton
+          label="Underline"
+          onClick={() => runCommand("underline")}
+        >
           <Underline aria-hidden="true" />
         </ToolbarButton>
         <span className="toolbar-divider" aria-hidden="true" />
-        <ToolbarButton label="Bulleted list" onClick={() => runCommand('insertUnorderedList')}>
+        <ToolbarButton
+          label="Bulleted list"
+          onClick={() => runCommand("insertUnorderedList")}
+        >
           <List aria-hidden="true" />
         </ToolbarButton>
-        <ToolbarButton label="Numbered list" onClick={() => runCommand('insertOrderedList')}>
+        <ToolbarButton
+          label="Numbered list"
+          onClick={() => runCommand("insertOrderedList")}
+        >
           <ListOrdered aria-hidden="true" />
         </ToolbarButton>
         <span className="toolbar-divider" aria-hidden="true" />
         <ToolbarButton label="Add link" onClick={handleLink}>
           <Link2 aria-hidden="true" />
         </ToolbarButton>
-        <ToolbarButton label="Clear formatting" onClick={() => runCommand('removeFormat')}>
+        <ToolbarButton
+          label="Clear formatting"
+          onClick={() => runCommand("removeFormat")}
+        >
           <X aria-hidden="true" />
         </ToolbarButton>
       </div>
@@ -1202,13 +1290,15 @@ function ResultsPanel({ snapshot, onResend }) {
       <aside className="results-panel empty">
         <Mail aria-hidden="true" />
         <h2>No mail job yet</h2>
-        <p>After starting a send, live status and failed mails will appear here.</p>
+        <p>
+          After starting a send, live status and failed mails will appear here.
+        </p>
       </aside>
     );
   }
 
   const { job, logs = [] } = snapshot;
-  const failedLogs = logs.filter((item) => item.status === 'failed');
+  const failedLogs = logs.filter((item) => item.status === "failed");
   const activeCount = job.pending + job.sending;
 
   return (
@@ -1216,10 +1306,10 @@ function ResultsPanel({ snapshot, onResend }) {
       <h2 id="results-title">Send status</h2>
       <p className="template-used">Template: {job.templateName}</p>
       <p className="template-used">
-        Mode:{' '}
-        {job.sendMode === 'queued'
+        Mode:{" "}
+        {job.sendMode === "queued"
           ? `Queue, 1 mail per ${job.queueIntervalSeconds} seconds`
-          : 'One go'}
+          : "One go"}
       </p>
       <p className="template-used">Status: {job.status}</p>
       <div className="stats-grid">
@@ -1233,7 +1323,9 @@ function ResultsPanel({ snapshot, onResend }) {
       <div className="result-list">
         {failedLogs.length === 0 && (
           <div className="result-empty">
-            {job.status === 'completed' ? 'No failed mails.' : 'Failures will appear here if any occur.'}
+            {job.status === "completed"
+              ? "No failed mails."
+              : "Failures will appear here if any occur."}
           </div>
         )}
         {failedLogs.map((item) => (
@@ -1244,10 +1336,16 @@ function ResultsPanel({ snapshot, onResend }) {
               <span>{item.error}</span>
               <span>
                 Template: {item.templateName} · Attempts: {item.attempts}
-                {item.failedAt ? ` · Failed: ${new Date(item.failedAt).toLocaleString()}` : ''}
+                {item.failedAt
+                  ? ` · Failed: ${new Date(item.failedAt).toLocaleString()}`
+                  : ""}
               </span>
             </div>
-            <button className="secondary-button compact" type="button" onClick={() => onResend(item.id)}>
+            <button
+              className="secondary-button compact"
+              type="button"
+              onClick={() => onResend(item.id)}
+            >
               <Send aria-hidden="true" />
               Resend
             </button>
@@ -1258,7 +1356,7 @@ function ResultsPanel({ snapshot, onResend }) {
   );
 }
 
-function Stat({ label, value, tone = '' }) {
+function Stat({ label, value, tone = "" }) {
   return (
     <div className={`stat ${tone}`}>
       <span>{label}</span>
@@ -1267,4 +1365,4 @@ function Stat({ label, value, tone = '' }) {
   );
 }
 
-createRoot(document.getElementById('root')).render(<App />);
+createRoot(document.getElementById("root")).render(<App />);

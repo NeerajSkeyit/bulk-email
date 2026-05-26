@@ -41,12 +41,6 @@ const __dirname = path.dirname(__filename);
 // Serve frontend
 const distPath = path.join(__dirname, "../dist");
 
-app.use(express.static(distPath));
-
-app.get("*", (req, res) => {
-  res.sendFile(path.join(distPath, "index.html"));
-});
-
 const uploadDir = path.resolve(process.cwd(), "server/uploads");
 const templateAttachmentDir = path.resolve(
   process.cwd(),
@@ -529,6 +523,12 @@ app.post("/api/mail/logs/:id/resend", requireAdmin, async (req, res) => {
   } catch (error) {
     res.status(400).json({ message: error.message });
   }
+});
+
+app.use(express.static(distPath));
+
+app.get("*", (req, res) => {
+  res.sendFile(path.join(distPath, "index.html"));
 });
 
 app.use((error, _req, res, _next) => {

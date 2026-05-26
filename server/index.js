@@ -31,6 +31,7 @@ import {
 } from "./db.js";
 import { extractEmailsFromWorkbook } from "./emailExtractor.js";
 import { sendTemplateMailToRecipient } from "./mailer.js";
+import { fileURLToPath } from "url";
 
 const app = express();
 
